@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>電気計算アプリ</title>
+  <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    background: #0a0e27;
+    background-image: 
+        radial-gradient(ellipse at top, rgba(25, 47, 89, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(13, 27, 62, 0.4) 0%, transparent 50%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #e8eaf6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(18, 25, 48, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+header {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1a237e 100%);
+    color: white;
+    padding: 40px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.03) 2px,
+            rgba(255, 255, 255, 0.03) 4px
+        );
+    pointer-events: none;
+}
+
+h1 {
+    font-size: 2.2em;
+    margin-bottom: 8px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    position: relative;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+header p {
+    font-size: 1em;
+    opacity: 0.9;
+    font-weight: 300;
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.tabs {
+    display: flex;
+    background: rgba(10, 14, 39, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tabs::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.tab {
+    padding: 18px 28px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    color: rgba(232, 234, 246, 0.7);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 80%;
+    height: 2px;
+    background: linear-gradient(90deg, #3f51b5, #5c6bc0);
+    transition: transform 0.3s ease;
+}
+
+.tab:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(232, 234, 246, 0.95);
+}
+
+.tab.active {
+    background: rgba(63, 81, 181, 0.15);
+    color: #9fa8da;
+    font-weight: 500;
+}
+
+.tab.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+.tab-content {
+    display: none;
+    padding: 35px;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.calc-section {
+    margin-bottom: 30px;
+    padding: 28px;
+    background: rgba(30, 39, 73, 0.4);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.calc-section:hover {
+    background: rgba(30, 39, 73, 0.5);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.calc-section h3 {
+    color: #9fa8da;
+    margin-bottom: 18px;
+    font-size: 1.4em;
+    font-weight: 400;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(159, 168, 218, 0.15);
+    padding-bottom: 12px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #c5cae9;
+    font-weight: 400;
+    font-size: 0.95em;
+    letter-spacing: 0.3px;
+}
+
+label small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85em;
+    color: rgba(197, 202, 233, 0.6);
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: rgba(13, 21, 46, 0.5);
+    color: #e8eaf6;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+input::placeholder {
+    color: rgba(232, 234, 246, 0.3);
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #5c6bc0;
+    background: rgba(13, 21, 46, 0.7);
+    box-shadow: 0 0 0 3px rgba(92, 107, 192, 0.15);
+}
+
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%239fa8da' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+select option {
+    background: #1a2238;
+    color: #e8eaf6;
+}
+
+button {
+    background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+    color: white;
+    padding: 13px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(63, 81, 181, 0.4);
+    background: linear-gradient(135deg, #4a5fc1 0%, #6573c3 100%);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.result {
+    margin-top: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(27, 94, 32, 0.15) 0%, rgba(46, 125, 50, 0.15) 100%);
+    border-left: 3px solid #66bb6a;
+    border-radius: 8px;
+    display: none;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(102, 187, 106, 0.2);
+}
+
+.result.show {
+    display: block;
+    animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.result h4 {
+    color: #a5d6a7;
+    margin-bottom: 12px;
+    font-weight: 500;
+    font-size: 1.1em;
+    letter-spacing: 0.5px;
+}
+
+.result p {
+    margin: 8px 0;
+    color: #c8e6c9;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+.result hr {
+    border: none;
+    border-top: 1px solid rgba(165, 214, 167, 0.2);
+    margin: 12px 0;
+}
+
+.result strong {
+    color: #e8f5e9;
+    font-weight: 500;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        padding: 30px 20px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .tab {
+        padding: 15px 20px;
+        font-size: 14px;
+    }
+
+    .tab-content {
+        padding: 20px;
+    }
+
+    .calc-section {
+        padding: 20px;
+    }
+}
+
+.radio-group {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px 16px;
+    background: rgba(63, 81, 181, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s ease;
+}
+
+.radio-group label:hover {
+    background: rgba(63, 81, 181, 0.15);
+    border-color: rgba(159, 168, 218, 0.3);
+}
+
+.radio-group input[type="radio"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #5c6bc0;
+}
+
+/* カスタムスクロールバー */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(10, 14, 39, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(159, 168, 218, 0.3);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(159, 168, 218, 0.5);
+}
+
+/* テキスト選択時の色 */
+::selection {
+    background: rgba(92, 107, 192, 0.3);
+    color: #e8eaf6;
+}
+
+/* 数値入力のスピナーボタンのスタイル調整 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.5;
+}
+
+input[type="number"]:hover::-webkit-inner-spin-button,
+input[type="number"]:hover::-webkit-outer-spin-button {
+    opacity: 1;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ 電気計算アプリ</h1>
+      <p>オームの法則、電力計算、進数変換など</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" onclick="openTab(event, 'ohm')">オームの法則</button>
+      <button class="tab" onclick="openTab(event, 'power')">電力計算</button>
+      <button class="tab" onclick="openTab(event, 'motor')">モーター速度</button>
+      <button class="tab" onclick="openTab(event, 'connection')">Δ-Y結線</button>
+      <button class="tab" onclick="openTab(event, 'unit')">単位変換</button>
+      <button class="tab" onclick="openTab(event, 'radix')">進数変換</button>
+    </div>
+
+    <!-- オームの法則タブ -->
+    <div id="ohm" class="tab-content active">
+      <div class="calc-section">
+        <h3>オームの法則計算 (V = I × R)</h3>
+        <p style="margin-bottom: 15px; color: #666;">2つの値を入力してください</p>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>電圧 (V) ボルト</label>
+            <input type="number" id="ohm-v" placeholder="電圧" oninput="calcOhm()" />
+          </div>
+          <div class="input-group">
+            <label>電流 (I) アンペア</label>
+            <input type="number" id="ohm-i" placeholder="電流" oninput="calcOhm()" />
+          </div>
+          <div class="input-group">
+            <label>抵抗 (R) オーム</label>
+            <input type="number" id="ohm-r" placeholder="抵抗" oninput="calcOhm()" />
+          </div>
+        </div>
+
+        <div class="result" id="ohm-result">
+          <h4>計算結果</h4>
+          <p id="ohm-output"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 電力計算タブ -->
+    <div id="power" class="tab-content">
+      <div class="calc-section">
+        <h3>単相電力計算</h3>
+        <p style="margin-bottom: 15px; color: #666;">P = V × I × cosθ（任意の2つの値を入力）</p>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>電力 (P) ワット</label>
+            <input type="number" id="single-p" placeholder="電力" oninput="calcSinglePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>電圧 (V) ボルト</label>
+            <input type="number" id="single-v" placeholder="電圧" oninput="calcSinglePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>電流 (I) アンペア</label>
+            <input type="number" id="single-i" placeholder="電流" oninput="calcSinglePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>力率 (cosθ)</label>
+            <input type="number" id="single-pf" placeholder="0.8" step="0.01" value="1" oninput="calcSinglePowerAuto()" />
+          </div>
+        </div>
+
+        <div class="result" id="single-result">
+          <h4>計算結果</h4>
+          <p id="single-output"></p>
+        </div>
+      </div>
+
+      <div class="calc-section">
+        <h3>三相電力計算</h3>
+        <p style="margin-bottom: 15px; color: #666;">P = √3 × V × I × cosθ（任意の2つの値を入力）</p>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>電力 (P) ワット</label>
+            <input type="number" id="three-p" placeholder="電力" oninput="calcThreePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>線間電圧 (V) ボルト</label>
+            <input type="number" id="three-v" placeholder="電圧" oninput="calcThreePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>線電流 (I) アンペア</label>
+            <input type="number" id="three-i" placeholder="電流" oninput="calcThreePowerAuto()" />
+          </div>
+          <div class="input-group">
+            <label>力率 (cosθ)</label>
+            <input type="number" id="three-pf" placeholder="0.8" step="0.01" value="1" oninput="calcThreePowerAuto()" />
+          </div>
+        </div>
+
+        <div class="result" id="three-result">
+          <h4>計算結果</h4>
+          <p id="three-output"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーター速度計算タブ -->
+    <div id="motor" class="tab-content">
+      <div class="calc-section">
+        <h3>モーター速度計算（周波数 → 速度）</h3>
+        <p style="margin-bottom: 15px; color: #666;">インバータ周波数からモーター速度を計算</p>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>周波数 (Hz)</label>
+            <input type="number" id="motor-freq" placeholder="例: 50" oninput="calcMotorSpeed()" />
+          </div>
+          <div class="input-group">
+            <label>極数</label>
+            <select id="motor-poles" onchange="calcMotorSpeed()">
+              <option value="2">2極（3600 rpm @ 60Hz）</option>
+              <option value="4" selected>4極（1800 rpm @ 60Hz）</option>
+              <option value="6">6極（1200 rpm @ 60Hz）</option>
+              <option value="8">8極（900 rpm @ 60Hz）</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>滑り率 (%)</label>
+            <input type="number" id="motor-slip" placeholder="例: 5" value="5" step="0.1" oninput="calcMotorSpeed()" />
+            <small style="color: #666;">※誘導モーターの場合。同期モーターは0%</small>
+          </div>
+          <div class="input-group">
+            <label>減速比（オプション）</label>
+            <input type="number" id="motor-reduction" placeholder="例: 10" step="0.01" oninput="calcMotorSpeed()" />
+            <small style="color: #666;">※減速機を使用する場合に入力</small>
+          </div>
+          <div class="input-group">
+            <label>プーリー/ギア径 (mm)（オプション）</label>
+            <input type="number" id="motor-diameter" placeholder="例: 100" oninput="calcMotorSpeed()" />
+            <small style="color: #666;">※直線速度計算用</small>
+          </div>
+        </div>
+
+        <div class="result" id="motor-result">
+          <h4>計算結果</h4>
+          <div id="motor-output"></div>
+        </div>
+      </div>
+
+      <div class="calc-section">
+        <h3>速度 → 周波数 逆算</h3>
+        <p style="margin-bottom: 15px; color: #666;">目標速度から必要な周波数を計算</p>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>目標速度 (m/min)</label>
+            <input type="number" id="reverse-speed" placeholder="例: 100" oninput="calcReverseFreq()" />
+          </div>
+          <div class="input-group">
+            <label>極数</label>
+            <select id="reverse-poles" onchange="calcReverseFreq()">
+              <option value="2">2極（3600 rpm @ 60Hz）</option>
+              <option value="4" selected>4極（1800 rpm @ 60Hz）</option>
+              <option value="6">6極（1200 rpm @ 60Hz）</option>
+              <option value="8">8極（900 rpm @ 60Hz）</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>滑り率 (%)</label>
+            <input type="number" id="reverse-slip" placeholder="例: 5" value="5" step="0.1" oninput="calcReverseFreq()" />
+          </div>
+          <div class="input-group">
+            <label>減速比（オプション）</label>
+            <input type="number" id="reverse-reduction" placeholder="例: 10" step="0.01" oninput="calcReverseFreq()" />
+          </div>
+          <div class="input-group">
+            <label>プーリー/ギア径 (mm)</label>
+            <input type="number" id="reverse-diameter" placeholder="例: 100" oninput="calcReverseFreq()" />
+          </div>
+        </div>
+
+        <div class="result" id="reverse-result">
+          <h4>計算結果</h4>
+          <div id="reverse-output"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Δ-Y結線タブ -->
+    <div id="connection" class="tab-content">
+      <div class="calc-section">
+        <h3>Δ結線 / Y結線 電圧・電流計算</h3>
+
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="connection-type" value="delta" checked onchange="updateConnectionLabels()" />
+            Δ結線（デルタ）
+          </label>
+          <label>
+            <input type="radio" name="connection-type" value="wye" onchange="updateConnectionLabels()" />
+            Y結線（スター）
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label id="conn-v-label">線間電圧 (V) ボルト</label>
+            <input type="number" id="conn-line-v" placeholder="線間電圧" />
+          </div>
+          <div class="input-group">
+            <label id="conn-i-label">線電流 (I) アンペア</label>
+            <input type="number" id="conn-line-i" placeholder="線電流" />
+          </div>
+        </div>
+
+        <button onclick="calcConnection()">計算する</button>
+
+        <div class="result" id="conn-result">
+          <h4>計算結果</h4>
+          <div id="conn-output"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 単位変換タブ -->
+    <div id="unit" class="tab-content">
+      <!-- 長さ変換 -->
+      <div class="calc-section">
+        <h3>長さ変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="length-value" placeholder="数値" oninput="convertLength()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="length-unit" onchange="convertLength()">
+              <option value="mm">ミリメートル (mm)</option>
+              <option value="cm">センチメートル (cm)</option>
+              <option value="m" selected>メートル (m)</option>
+              <option value="km">キロメートル (km)</option>
+              <option value="inch">インチ (in)</option>
+              <option value="ft">フィート (ft)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="length-result">
+          <h4>変換結果</h4>
+          <div id="length-output"></div>
+        </div>
+      </div>
+
+      <!-- 時間変換 -->
+      <div class="calc-section">
+        <h3>時間変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="time-value" placeholder="数値" oninput="convertTime()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="time-unit" onchange="convertTime()">
+              <option value="ns">ナノ秒 (ns)</option>
+              <option value="us">マイクロ秒 (μs)</option>
+              <option value="ms">ミリ秒 (ms)</option>
+              <option value="s" selected>秒 (s)</option>
+              <option value="min">分 (min)</option>
+              <option value="hour">時間 (h)</option>
+              <option value="day">日 (day)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="time-result">
+          <h4>変換結果</h4>
+          <div id="time-output"></div>
+        </div>
+      </div>
+
+      <!-- 電流変換 -->
+      <div class="calc-section">
+        <h3>電流変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="current-value" placeholder="数値" oninput="convertCurrent()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="current-unit" onchange="convertCurrent()">
+              <option value="uA">マイクロアンペア (μA)</option>
+              <option value="mA">ミリアンペア (mA)</option>
+              <option value="A" selected>アンペア (A)</option>
+              <option value="kA">キロアンペア (kA)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="current-result">
+          <h4>変換結果</h4>
+          <div id="current-output"></div>
+        </div>
+      </div>
+
+      <!-- 電圧変換 -->
+      <div class="calc-section">
+        <h3>電圧変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="voltage-value" placeholder="数値" oninput="convertVoltage()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="voltage-unit" onchange="convertVoltage()">
+              <option value="uV">マイクロボルト (μV)</option>
+              <option value="mV">ミリボルト (mV)</option>
+              <option value="V" selected>ボルト (V)</option>
+              <option value="kV">キロボルト (kV)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="voltage-result">
+          <h4>変換結果</h4>
+          <div id="voltage-output"></div>
+        </div>
+      </div>
+
+      <!-- 電力変換 -->
+      <div class="calc-section">
+        <h3>電力変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="power-value" placeholder="数値" oninput="convertPower()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="power-unit" onchange="convertPower()">
+              <option value="mW">ミリワット (mW)</option>
+              <option value="W" selected>ワット (W)</option>
+              <option value="kW">キロワット (kW)</option>
+              <option value="MW">メガワット (MW)</option>
+              <option value="HP">馬力 (HP)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="power-result">
+          <h4>変換結果</h4>
+          <div id="power-output"></div>
+        </div>
+      </div>
+
+      <!-- 抵抗変換 -->
+      <div class="calc-section">
+        <h3>抵抗変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="resistance-value" placeholder="数値" oninput="convertResistance()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="resistance-unit" onchange="convertResistance()">
+              <option value="mΩ">ミリオーム (mΩ)</option>
+              <option value="Ω" selected>オーム (Ω)</option>
+              <option value="kΩ">キロオーム (kΩ)</option>
+              <option value="MΩ">メガオーム (MΩ)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="resistance-result">
+          <h4>変換結果</h4>
+          <div id="resistance-output"></div>
+        </div>
+      </div>
+
+      <!-- 周波数変換 -->
+      <div class="calc-section">
+        <h3>周波数変換</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>値を入力</label>
+            <input type="number" id="freq-value" placeholder="数値" oninput="convertFrequency()" />
+          </div>
+          <div class="input-group">
+            <label>単位</label>
+            <select id="freq-unit" onchange="convertFrequency()">
+              <option value="Hz" selected>ヘルツ (Hz)</option>
+              <option value="kHz">キロヘルツ (kHz)</option>
+              <option value="MHz">メガヘルツ (MHz)</option>
+              <option value="GHz">ギガヘルツ (GHz)</option>
+            </select>
+          </div>
+        </div>
+        <div class="result" id="freq-result">
+          <h4>変換結果</h4>
+          <div id="freq-output"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 進数変換タブ -->
+    <div id="radix" class="tab-content">
+      <div class="calc-section">
+        <h3>進数変換</h3>
+
+        <div class="input-group">
+          <label>変換する数値を入力</label>
+          <input type="text" id="radix-input" placeholder="数値を入力" />
+        </div>
+
+        <div class="input-group">
+          <label>入力形式</label>
+          <select id="radix-from">
+            <option value="10">10進数</option>
+            <option value="2">2進数</option>
+            <option value="8">8進数</option>
+            <option value="16">16進数</option>
+          </select>
+        </div>
+
+        <button onclick="convertRadix()">変換する</button>
+
+        <div class="result" id="radix-result">
+          <h4>変換結果</h4>
+          <div id="radix-output"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* タブ切り替え */
+function openTab(evt, tabName) {
+  const tabContents = document.getElementsByClassName('tab-content');
+  for (let i = 0; i < tabContents.length; i++) {
+    tabContents[i].classList.remove('active');
+  }
+
+  const tabs = document.getElementsByClassName('tab');
+  for (let i = 0; i < tabs.length; i++) {
+    tabs[i].classList.remove('active');
+  }
+
+  document.getElementById(tabName).classList.add('active');
+  evt.currentTarget.classList.add('active');
+}
+
+/* オームの法則計算 */
+function calcOhm() {
+  const v = parseFloat(document.getElementById('ohm-v').value);
+  const i = parseFloat(document.getElementById('ohm-i').value);
+  const r = parseFloat(document.getElementById('ohm-r').value);
+
+  const result = document.getElementById('ohm-result');
+  const output = document.getElementById('ohm-output');
+
+  let count = 0;
+  if (!isNaN(v)) count++;
+  if (!isNaN(i)) count++;
+  if (!isNaN(r)) count++;
+
+  if (count < 2) {
+    result.classList.remove('show');
+    return;
+  }
+
+  let resultText = '';
+
+  if (isNaN(v) && !isNaN(i) && !isNaN(r)) {
+    const voltage = i * r;
+    resultText = `電圧 (V) = ${voltage.toFixed(2)} V<br>計算式: V = I × R = ${i} × ${r}`;
+  } else if (!isNaN(v) && isNaN(i) && !isNaN(r)) {
+    const current = v / r;
+    resultText = `電流 (I) = ${current.toFixed(2)} A<br>計算式: I = V ÷ R = ${v} ÷ ${r}`;
+  } else if (!isNaN(v) && !isNaN(i) && isNaN(r)) {
+    const resistance = v / i;
+    resultText = `抵抗 (R) = ${resistance.toFixed(2)} Ω<br>計算式: R = V ÷ I = ${v} ÷ ${i}`;
+  } else {
+    resultText = '2つの値のみを入力してください';
+  }
+
+  output.innerHTML = resultText;
+  result.classList.add('show');
+}
+
+/* 単相電力計算（自動） */
+function calcSinglePowerAuto() {
+  const p = parseFloat(document.getElementById('single-p').value);
+  const v = parseFloat(document.getElementById('single-v').value);
+  const i = parseFloat(document.getElementById('single-i').value);
+  const pf = parseFloat(document.getElementById('single-pf').value);
+
+  const result = document.getElementById('single-result');
+  const output = document.getElementById('single-output');
+
+  let count = 0;
+  if (!isNaN(p)) count++;
+  if (!isNaN(v)) count++;
+  if (!isNaN(i)) count++;
+
+  const powerFactor = isNaN(pf) ? 1 : pf;
+
+  if (count < 2) {
+    result.classList.remove('show');
+    return;
+  }
+
+  let resultHTML = '';
+
+  if (!isNaN(p) && !isNaN(v) && isNaN(i)) {
+    const current = p / (v * powerFactor);
+    const apparentPower = v * current;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - p * p));
+
+    resultHTML = `
+      <p><strong>電流を計算:</strong></p>
+      <p>電流 (I) = ${current.toFixed(2)} A</p>
+      <p>計算式: I = P ÷ (V × cosθ) = ${p} ÷ (${v} × ${powerFactor})</p>
+      <hr style="margin: 10px 0;">
+      <p>有効電力 (P) = ${p.toFixed(2)} W (${(p/1000).toFixed(2)} kW)</p>
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else if (!isNaN(p) && isNaN(v) && !isNaN(i)) {
+    const voltage = p / (i * powerFactor);
+    const apparentPower = voltage * i;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - p * p));
+
+    resultHTML = `
+      <p><strong>電圧を計算:</strong></p>
+      <p>電圧 (V) = ${voltage.toFixed(2)} V</p>
+      <p>計算式: V = P ÷ (I × cosθ) = ${p} ÷ (${i} × ${powerFactor})</p>
+      <hr style="margin: 10px 0;">
+      <p>有効電力 (P) = ${p.toFixed(2)} W (${(p/1000).toFixed(2)} kW)</p>
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else if (isNaN(p) && !isNaN(v) && !isNaN(i)) {
+    const power = v * i * powerFactor;
+    const apparentPower = v * i;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - power * power));
+
+    resultHTML = `
+      <p><strong>電力を計算:</strong></p>
+      <p>有効電力 (P) = ${power.toFixed(2)} W (${(power/1000).toFixed(2)} kW)</p>
+      <p>計算式: P = V × I × cosθ = ${v} × ${i} × ${powerFactor}</p>
+      <hr style="margin: 10px 0;">
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else {
+    resultHTML = '<p>2つの値を入力してください（電力、電圧、電流のうち2つ）</p>';
+  }
+
+  output.innerHTML = resultHTML;
+  result.classList.add('show');
+}
+
+/* 三相電力計算（自動） */
+function calcThreePowerAuto() {
+  const p = parseFloat(document.getElementById('three-p').value);
+  const v = parseFloat(document.getElementById('three-v').value);
+  const i = parseFloat(document.getElementById('three-i').value);
+  const pf = parseFloat(document.getElementById('three-pf').value);
+
+  const result = document.getElementById('three-result');
+  const output = document.getElementById('three-output');
+
+  let count = 0;
+  if (!isNaN(p)) count++;
+  if (!isNaN(v)) count++;
+  if (!isNaN(i)) count++;
+
+  const powerFactor = isNaN(pf) ? 1 : pf;
+
+  if (count < 2) {
+    result.classList.remove('show');
+    return;
+  }
+
+  let resultHTML = '';
+  const sqrt3 = Math.sqrt(3);
+
+  if (!isNaN(p) && !isNaN(v) && isNaN(i)) {
+    const current = p / (sqrt3 * v * powerFactor);
+    const apparentPower = sqrt3 * v * current;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - p * p));
+
+    resultHTML = `
+      <p><strong>電流を計算:</strong></p>
+      <p>線電流 (I) = ${current.toFixed(2)} A</p>
+      <p>計算式: I = P ÷ (√3 × V × cosθ) = ${p} ÷ (${sqrt3.toFixed(3)} × ${v} × ${powerFactor})</p>
+      <hr style="margin: 10px 0;">
+      <p>有効電力 (P) = ${p.toFixed(2)} W (${(p/1000).toFixed(2)} kW)</p>
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else if (!isNaN(p) && isNaN(v) && !isNaN(i)) {
+    const voltage = p / (sqrt3 * i * powerFactor);
+    const apparentPower = sqrt3 * voltage * i;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - p * p));
+
+    resultHTML = `
+      <p><strong>電圧を計算:</strong></p>
+      <p>線間電圧 (V) = ${voltage.toFixed(2)} V</p>
+      <p>計算式: V = P ÷ (√3 × I × cosθ) = ${p} ÷ (${sqrt3.toFixed(3)} × ${i} × ${powerFactor})</p>
+      <hr style="margin: 10px 0;">
+      <p>有効電力 (P) = ${p.toFixed(2)} W (${(p/1000).toFixed(2)} kW)</p>
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else if (isNaN(p) && !isNaN(v) && !isNaN(i)) {
+    const power = sqrt3 * v * i * powerFactor;
+    const apparentPower = sqrt3 * v * i;
+    const reactivePower = Math.sqrt(Math.max(0, apparentPower * apparentPower - power * power));
+
+    resultHTML = `
+      <p><strong>電力を計算:</strong></p>
+      <p>有効電力 (P) = ${power.toFixed(2)} W (${(power/1000).toFixed(2)} kW)</p>
+      <p>計算式: P = √3 × V × I × cosθ = ${sqrt3.toFixed(3)} × ${v} × ${i} × ${powerFactor}</p>
+      <hr style="margin: 10px 0;">
+      <p>皮相電力 (S) = ${apparentPower.toFixed(2)} VA (${(apparentPower/1000).toFixed(2)} kVA)</p>
+      <p>無効電力 (Q) = ${reactivePower.toFixed(2)} var</p>
+      <p>力率 = ${powerFactor}</p>
+    `;
+  } else {
+    resultHTML = '<p>2つの値を入力してください（電力、電圧、電流のうち2つ）</p>';
+  }
+
+  output.innerHTML = resultHTML;
+  result.classList.add('show');
+}
+
+/* モーター速度計算 */
+function calcMotorSpeed() {
+  const freq = parseFloat(document.getElementById('motor-freq').value);
+  const poles = parseInt(document.getElementById('motor-poles').value);
+  const slip = parseFloat(document.getElementById('motor-slip').value) || 0;
+  const reduction = parseFloat(document.getElementById('motor-reduction').value);
+  const diameter = parseFloat(document.getElementById('motor-diameter').value);
+
+  if (isNaN(freq)) {
+    document.getElementById('motor-result').classList.remove('show');
+    return;
+  }
+
+  const result = document.getElementById('motor-result');
+  const output = document.getElementById('motor-output');
+
+  const syncSpeed = (120 * freq) / poles;
+  const actualSpeed = syncSpeed * (1 - slip / 100);
+  const outputSpeed = isNaN(reduction) ? actualSpeed : actualSpeed / reduction;
+
+  let resultHTML = `
+    <p><strong>同期速度:</strong> ${syncSpeed.toFixed(2)} rpm</p>
+    <p><strong>実回転数:</strong> ${actualSpeed.toFixed(2)} rpm （滑り ${slip}%）</p>
+  `;
+
+  if (!isNaN(reduction)) {
+    resultHTML += `<p><strong>減速後回転数:</strong> ${outputSpeed.toFixed(2)} rpm （減速比 1:${reduction}）</p>`;
+  }
+
+  if (!isNaN(diameter)) {
+    const linearSpeed = Math.PI * diameter * outputSpeed / 1000;
+    resultHTML += `
+      <hr style="margin: 10px 0;">
+      <p><strong>直線速度:</strong> ${linearSpeed.toFixed(2)} m/min</p>
+      <p><strong>直線速度:</strong> ${(linearSpeed / 60).toFixed(2)} m/s</p>
+      <p>（プーリー/ギア径: ${diameter} mm）</p>
+    `;
+  }
+
+  resultHTML += `
+    <hr style="margin: 10px 0;">
+    <p style="font-size: 0.9em; color: #666;">
+      計算式: 同期速度 = 120 × ${freq} ÷ ${poles} = ${syncSpeed.toFixed(2)} rpm<br>
+      実回転数 = ${syncSpeed.toFixed(2)} × (1 - ${slip}/100) = ${actualSpeed.toFixed(2)} rpm
+    </p>
+  `;
+
+  output.innerHTML = resultHTML;
+  result.classList.add('show');
+}
+
+/* 速度から周波数を逆算 */
+function calcReverseFreq() {
+  const speed = parseFloat(document.getElementById('reverse-speed').value);
+  const poles = parseInt(document.getElementById('reverse-poles').value);
+  const slip = parseFloat(document.getElementById('reverse-slip').value) || 0;
+  const reduction = parseFloat(document.getElementById('reverse-reduction').value);
+  const diameter = parseFloat(document.getElementById('reverse-diameter').value);
+
+  if (isNaN(speed) || isNaN(diameter)) {
+    document.getElementById('reverse-result').classList.remove('show');
+    return;
+  }
+
+  const result = document.getElementById('reverse-result');
+  const output = document.getElementById('reverse-output');
+
+  const outputRpm = (speed * 1000) / (Math.PI * diameter);
+  const motorRpm = isNaN(reduction) ? outputRpm : outputRpm * reduction;
+  const syncSpeed = motorRpm / (1 - slip / 100);
+  const requiredFreq = (syncSpeed * poles) / 120;
+
+  let resultHTML = `
+    <p><strong>必要な周波数:</strong> ${requiredFreq.toFixed(2)} Hz</p>
+    <hr style="margin: 10px 0;">
+    <p><strong>出力軸回転数:</strong> ${outputRpm.toFixed(2)} rpm</p>
+  `;
+
+  if (!isNaN(reduction)) {
+    resultHTML += `<p><strong>モーター回転数:</strong> ${motorRpm.toFixed(2)} rpm （減速比 1:${reduction}）</p>`;
+  }
+
+  resultHTML += `
+    <p><strong>同期速度:</strong> ${syncSpeed.toFixed(2)} rpm</p>
+    <hr style="margin: 10px 0;">
+    <p style="font-size: 0.9em; color: #666;">
+      計算式:<br>
+      回転数 = ${speed} × 1000 ÷ (π × ${diameter}) = ${outputRpm.toFixed(2)} rpm<br>
+  `;
+
+  if (!isNaN(reduction)) {
+    resultHTML += `モーター回転数 = ${outputRpm.toFixed(2)} × ${reduction} = ${motorRpm.toFixed(2)} rpm<br>`;
+  }
+
+  resultHTML += `
+      同期速度 = ${motorRpm.toFixed(2)} ÷ (1 - ${slip}/100) = ${syncSpeed.toFixed(2)} rpm<br>
+      周波数 = ${syncSpeed.toFixed(2)} × ${poles} ÷ 120 = ${requiredFreq.toFixed(2)} Hz
+    </p>
+  `;
+
+  output.innerHTML = resultHTML;
+  result.classList.add('show');
+}
+
+/* 結線ラベル更新（必要ならここでlabel文言を切り替え可能） */
+function updateConnectionLabels() {
+  // 現状はUI表示変更が不要なので空実装（将来用）
+}
+
+/* Δ-Y結線計算 */
+function calcConnection() {
+  const lineV = parseFloat(document.getElementById('conn-line-v').value);
+  const lineI = parseFloat(document.getElementById('conn-line-i').value);
+  const isDelta = document.querySelector('input[name="connection-type"]:checked').value === 'delta';
+
+  if (isNaN(lineV) || isNaN(lineI)) {
+    alert('線間電圧と線電流を入力してください');
+    return;
+  }
+
+  const result = document.getElementById('conn-result');
+  const output = document.getElementById('conn-output');
+
+  let resultHTML = '';
+
+  if (isDelta) {
+    const phaseV = lineV;
+    const phaseI = lineI / Math.sqrt(3);
+    resultHTML = `
+      <p><strong>Δ結線（デルタ結線）</strong></p>
+      <p>線間電圧 = ${lineV.toFixed(2)} V</p>
+      <p>線電流 = ${lineI.toFixed(2)} A</p>
+      <p>相電圧 = ${phaseV.toFixed(2)} V （線間電圧と同じ）</p>
+      <p>相電流 = ${phaseI.toFixed(2)} A （線電流 ÷ √3）</p>
+    `;
+  } else {
+    const phaseV = lineV / Math.sqrt(3);
+    const phaseI = lineI;
+    resultHTML = `
+      <p><strong>Y結線（スター結線）</strong></p>
+      <p>線間電圧 = ${lineV.toFixed(2)} V</p>
+      <p>線電流 = ${lineI.toFixed(2)} A</p>
+      <p>相電圧 = ${phaseV.toFixed(2)} V （線間電圧 ÷ √3）</p>
+      <p>相電流 = ${phaseI.toFixed(2)} A （線電流と同じ）</p>
+    `;
+  }
+
+  output.innerHTML = resultHTML;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 長さ */
+function convertLength() {
+  const value = parseFloat(document.getElementById('length-value').value);
+  const unit = document.getElementById('length-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('length-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'mm': value / 1000,
+    'cm': value / 100,
+    'm': value,
+    'km': value * 1000,
+    'inch': value * 0.0254,
+    'ft': value * 0.3048
+  };
+
+  const meters = conversions[unit];
+
+  const result = document.getElementById('length-result');
+  const output = document.getElementById('length-output');
+
+  output.innerHTML = `
+    <p><strong>ミリメートル (mm):</strong> ${(meters * 1000).toFixed(4)}</p>
+    <p><strong>センチメートル (cm):</strong> ${(meters * 100).toFixed(4)}</p>
+    <p><strong>メートル (m):</strong> ${meters.toFixed(4)}</p>
+    <p><strong>キロメートル (km):</strong> ${(meters / 1000).toFixed(6)}</p>
+    <p><strong>インチ (in):</strong> ${(meters / 0.0254).toFixed(4)}</p>
+    <p><strong>フィート (ft):</strong> ${(meters / 0.3048).toFixed(4)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 時間 */
+function convertTime() {
+  const value = parseFloat(document.getElementById('time-value').value);
+  const unit = document.getElementById('time-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('time-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'ns': value / 1000000000,
+    'us': value / 1000000,
+    'ms': value / 1000,
+    's': value,
+    'min': value * 60,
+    'hour': value * 3600,
+    'day': value * 86400
+  };
+
+  const seconds = conversions[unit];
+
+  const result = document.getElementById('time-result');
+  const output = document.getElementById('time-output');
+
+  output.innerHTML = `
+    <p><strong>ナノ秒 (ns):</strong> ${(seconds * 1000000000).toFixed(2)}</p>
+    <p><strong>マイクロ秒 (μs):</strong> ${(seconds * 1000000).toFixed(4)}</p>
+    <p><strong>ミリ秒 (ms):</strong> ${(seconds * 1000).toFixed(6)}</p>
+    <p><strong>秒 (s):</strong> ${seconds.toFixed(9)}</p>
+    <p><strong>分 (min):</strong> ${(seconds / 60).toFixed(9)}</p>
+    <p><strong>時間 (h):</strong> ${(seconds / 3600).toFixed(9)}</p>
+    <p><strong>日 (day):</strong> ${(seconds / 86400).toFixed(12)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 電流 */
+function convertCurrent() {
+  const value = parseFloat(document.getElementById('current-value').value);
+  const unit = document.getElementById('current-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('current-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'uA': value / 1000000,
+    'mA': value / 1000,
+    'A': value,
+    'kA': value * 1000
+  };
+
+  const amperes = conversions[unit];
+
+  const result = document.getElementById('current-result');
+  const output = document.getElementById('current-output');
+
+  output.innerHTML = `
+    <p><strong>マイクロアンペア (μA):</strong> ${(amperes * 1000000).toFixed(4)}</p>
+    <p><strong>ミリアンペア (mA):</strong> ${(amperes * 1000).toFixed(4)}</p>
+    <p><strong>アンペア (A):</strong> ${amperes.toFixed(6)}</p>
+    <p><strong>キロアンペア (kA):</strong> ${(amperes / 1000).toFixed(9)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 電圧 */
+function convertVoltage() {
+  const value = parseFloat(document.getElementById('voltage-value').value);
+  const unit = document.getElementById('voltage-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('voltage-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'uV': value / 1000000,
+    'mV': value / 1000,
+    'V': value,
+    'kV': value * 1000
+  };
+
+  const volts = conversions[unit];
+
+  const result = document.getElementById('voltage-result');
+  const output = document.getElementById('voltage-output');
+
+  output.innerHTML = `
+    <p><strong>マイクロボルト (μV):</strong> ${(volts * 1000000).toFixed(4)}</p>
+    <p><strong>ミリボルト (mV):</strong> ${(volts * 1000).toFixed(4)}</p>
+    <p><strong>ボルト (V):</strong> ${volts.toFixed(6)}</p>
+    <p><strong>キロボルト (kV):</strong> ${(volts / 1000).toFixed(9)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 電力 */
+function convertPower() {
+  const value = parseFloat(document.getElementById('power-value').value);
+  const unit = document.getElementById('power-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('power-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'mW': value / 1000,
+    'W': value,
+    'kW': value * 1000,
+    'MW': value * 1000000,
+    'HP': value * 745.7
+  };
+
+  const watts = conversions[unit];
+
+  const result = document.getElementById('power-result');
+  const output = document.getElementById('power-output');
+
+  output.innerHTML = `
+    <p><strong>ミリワット (mW):</strong> ${(watts * 1000).toFixed(4)}</p>
+    <p><strong>ワット (W):</strong> ${watts.toFixed(4)}</p>
+    <p><strong>キロワット (kW):</strong> ${(watts / 1000).toFixed(6)}</p>
+    <p><strong>メガワット (MW):</strong> ${(watts / 1000000).toFixed(9)}</p>
+    <p><strong>馬力 (HP):</strong> ${(watts / 745.7).toFixed(6)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 抵抗 */
+function convertResistance() {
+  const value = parseFloat(document.getElementById('resistance-value').value);
+  const unit = document.getElementById('resistance-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('resistance-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'mΩ': value / 1000,
+    'Ω': value,
+    'kΩ': value * 1000,
+    'MΩ': value * 1000000
+  };
+
+  const ohms = conversions[unit];
+
+  const result = document.getElementById('resistance-result');
+  const output = document.getElementById('resistance-output');
+
+  output.innerHTML = `
+    <p><strong>ミリオーム (mΩ):</strong> ${(ohms * 1000).toFixed(4)}</p>
+    <p><strong>オーム (Ω):</strong> ${ohms.toFixed(6)}</p>
+    <p><strong>キロオーム (kΩ):</strong> ${(ohms / 1000).toFixed(9)}</p>
+    <p><strong>メガオーム (MΩ):</strong> ${(ohms / 1000000).toFixed(12)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 単位変換 - 周波数 */
+function convertFrequency() {
+  const value = parseFloat(document.getElementById('freq-value').value);
+  const unit = document.getElementById('freq-unit').value;
+
+  if (isNaN(value)) {
+    document.getElementById('freq-result').classList.remove('show');
+    return;
+  }
+
+  const conversions = {
+    'Hz': value,
+    'kHz': value * 1000,
+    'MHz': value * 1000000,
+    'GHz': value * 1000000000
+  };
+
+  const hertz = conversions[unit];
+
+  const result = document.getElementById('freq-result');
+  const output = document.getElementById('freq-output');
+
+  output.innerHTML = `
+    <p><strong>ヘルツ (Hz):</strong> ${hertz.toFixed(4)}</p>
+    <p><strong>キロヘルツ (kHz):</strong> ${(hertz / 1000).toFixed(6)}</p>
+    <p><strong>メガヘルツ (MHz):</strong> ${(hertz / 1000000).toFixed(9)}</p>
+    <p><strong>ギガヘルツ (GHz):</strong> ${(hertz / 1000000000).toFixed(12)}</p>
+  `;
+  result.classList.add('show');
+}
+
+/* 進数変換 */
+function convertRadix() {
+  const input = document.getElementById('radix-input').value.trim();
+  const fromRadix = parseInt(document.getElementById('radix-from').value);
+
+  if (!input) {
+    alert('数値を入力してください');
+    return;
+  }
+
+  try {
+    const decimal = parseInt(input, fromRadix);
+
+    if (isNaN(decimal)) {
+      alert('無効な数値です');
+      return;
+    }
+
+    const binary = decimal.toString(2);
+    const octal = decimal.toString(8);
+    const dec = decimal.toString(10);
+    const hex = decimal.toString(16).toUpperCase();
+
+    const result = document.getElementById('radix-result');
+    const output = document.getElementById('radix-output');
+
+    output.innerHTML = `
+      <p><strong>入力値:</strong> ${input} （${fromRadix}進数）</p>
+      <p><strong>2進数:</strong> ${binary}</p>
+      <p><strong>8進数:</strong> ${octal}</p>
+      <p><strong>10進数:</strong> ${dec}</p>
+      <p><strong>16進数:</strong> ${hex}</p>
+    `;
+    result.classList.add('show');
+  } catch (e) {
+    alert('変換エラーが発生しました');
+  }
+}
+  </script>
+</body>
+</html>
